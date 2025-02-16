@@ -1,106 +1,120 @@
-import { NextRequest, NextResponse } from "next/server";
-import fetch from 'node-fetch';
+"use client";
 
-// Rate limiting configuration (optional)
-const RATE_LIMIT = {
-  MAX_REQUESTS: 10, // Maximum number of requests allowed
-  WINDOW_SIZE: 60 * 1000, // Time window in milliseconds (e.g., 1 minute)
-};
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Spinner } from "../components/Spinner";
 
-// In-memory rate limit store (replace with a proper store like Redis in production)
-const rateLimitStore = new Map<string, { count: number; lastRequest: number }>();
+export default function Lerit() {
+  const [messages, setMessages] = useState<{ role: string; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-// Helper function to check rate limits
-function checkRateLimit(identifier: string): boolean {
-  const now = Date.now();
-  const record = rateLimitStore.get(identifier);
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
 
-  if (!record) {
-    rateLimitStore.set(identifier, { count: 1, lastRequest: now });
-    return true;
-  }
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input.trim()) return;
 
-  if (now - record.lastRequest > RATE_LIMIT.WINDOW_SIZE) {
-    rateLimitStore.set(identifier, { count: 1, lastRequest: now });
-    return true;
-  }
+    setIsTyping(true);
 
-  if (record.count >= RATE_LIMIT.MAX_REQUESTS) {
-    return false;
-  }
+    const newMessage = { role: "user", content: input };
+    setMessages((prevMessages) => [...prevMessages, newMessage]);
 
-  rateLimitStore.set(identifier, { count: record.count + 1, lastRequest: now });
-  return true;
-}
-
-// System prompt for the chatbot
-const systemPrompt = `You are a friendly e-commerce AI chatbot. Your goal is to assist customers with their shopping needs, provide product recommendations, and facilitate a seamless checkout process.`;
-
-export async function POST(req: NextRequest) {
-  // Use a custom identifier for rate limiting (e.g., API key, session ID, or user ID)
-  const identifier =
-    req.headers.get("x-api-key") || // Use API key from headers
-    req.headers.get("authorization") || // Use authorization token
-    "anonymous"; // Fallback for anonymous users
-
-  // Check rate limit
-  if (!checkRateLimit(identifier)) {
-    return NextResponse.json(
-      { error: "Too many requests. Please try again later." },
-      { status: 429 }
-    );
-  }
-
-  try {
-    // Extracting and Formatting the Request Data
-    const data = await req.json();
-    const messages = Array.isArray(data) ? data : [data];
-
-    // Validate and ensure the request data has 'role' and 'content' properties
-    if (!messages || !messages.length) {
-      return NextResponse.json(
-        { error: "Invalid request data. 'messages' array is required." },
-        { status: 400 }
-      );
-    }
-
-    // Use the system prompt if needed (for future use cases)
-    console.log(systemPrompt);
-
-    // Check if someone says "hi"
-    const userMessage = messages.find(msg => msg.content && msg.content.toLowerCase() === "hi");
-    let responseMessage;
-
-    if (userMessage) {
-      responseMessage = "hi, how can I help you?";
-    } else {
-      // Fetch response from Groq API
-      const apiKey = process.env.GROQ_API_KEY;
-      const response = await fetch('https://api.groq.com/v1/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({ messages })
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: [...messages, newMessage] }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch response from Groq API');
+        throw new Error("Failed to fetch response from the server.");
       }
 
-      const jsonResponse = await response.json();
-      responseMessage = jsonResponse.reply;
-    }
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      const assistantMessage = { role: "assistant", content: "" }; // Changed let to const
 
-    // Sending the Final Response
-    return NextResponse.json({ response: responseMessage }, { status: 200 });
-  } catch (error) {
-    // Handle any errors that occur during the process
-    console.error("Error in /api/chat:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
-  }
+      setMessages((prevMessages) => [...prevMessages, assistantMessage]);
+
+      while (!done) {
+        const { value, done: readerDone } = await reader!.read();
+        done = readerDone;
+        const chunk = decoder.decode(value, { stream: true });
+        assistantMessage.content += chunk;
+
+        setMessages((prevMessages) => [
+          ...prevMessages.slice(0, -1),
+          { ...assistantMessage },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { role: "assistant", content: "Sorry, something went wrong. Please try again." },
+      ]);
+    } finally {
+      setIsTyping(false);
+      setInput("");
+    }
+  };
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  return (
+    <Card className="w-full max-w-2xl">
+      <CardHeader>
+        <CardTitle>Lerit</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 h-96 overflow-y-auto">
+        {messages.map((message, index) => (
+          <div
+            key={index}
+            className={`flex ${
+              message.role === "user" ? "justify-end" : "justify-start"
+            }`}
+          >
+            <div
+              className={`p-2 rounded-lg ${
+                message.role === "user"
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-200 text-black"
+              }`}
+            >
+              {message.content}
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </CardContent>
+      <CardFooter>
+        <form onSubmit={handleSubmit} className="flex w-full gap-2">
+          <Input
+            value={input}
+            onChange={handleInputChange}
+            placeholder="Type your message..."
+            disabled={isTyping}
+          />
+          <Button type="submit" disabled={isTyping}>
+            {isTyping ? <Spinner /> : "Send"}
+          </Button>
+        </form>
+      </CardFooter>
+    </Card>
+  );
 }
