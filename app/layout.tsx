@@ -19,9 +19,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-pink-200`}>
         {/* Header */}
-        <header className="bg-blue-600 text-white p-4 text-center">
+        <header className="bg-white text-black p-4 text-center">
           <h1 className="text-2xl font-bold">E-Commerce AI Assistant</h1>
           <p className="text-sm">Your personal shopping assistant powered by Groq AI</p>
         </header>
