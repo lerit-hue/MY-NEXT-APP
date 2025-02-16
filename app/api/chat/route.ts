@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Simplify the chatbot response
-    const responseMessage = "hi, how can I assist you";
+    const responseMessage = "hi";
 
     // Sending the Final Response
     return NextResponse.json({ response: responseMessage }, { status: 200 });
