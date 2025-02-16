@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk"; // Import Groq SDK
 
 // Rate limiting configuration (optional)
 const RATE_LIMIT = {
@@ -60,12 +59,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Ensure every message has 'role' and 'content' properties
-    const validatedMessages = messages.map((msg) => ({
-      role: msg.role || "user",
-      content: msg.content || "",
-    }));
 
     // Simplify the chatbot response
     const responseMessage = "hi, how can I assist you";
