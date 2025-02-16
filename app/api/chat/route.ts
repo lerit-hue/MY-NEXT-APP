@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     ) {
       // Return a short predefined response
       return NextResponse.json(
-        {  "Hello! 👋 How can I help you today?" },
+        { message: "Hello! 👋 How can I help you today?" },
         { status: 200 }
       );
     }
@@ -46,9 +46,9 @@ export async function POST(req: Request) {
     });
 
     // Extract the response content
-    const response = completion.choices[0]?.message?.content || "";
+    const responseContent = completion.choices[0]?.message?.content || "";
 
-    return NextResponse.json({ response }, { status: 200 });
+    return NextResponse.json({ message: responseContent }, { status: 200 });
   } catch (error) {
     console.error("Error in /api/chat:", error);
     return NextResponse.json(
