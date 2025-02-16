@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk"; // Import Groq SDK
 
-// System prompt for the chatbot
-const systemPrompt = `You are a friendly e-commerce AI chatbot. Your goal is to assist customers with their shopping needs, provide product recommendations, and facilitate a seamless checkout process.[...]`;
-
 // Rate limiting configuration (optional)
 const RATE_LIMIT = {
   MAX_REQUESTS: 10, // Maximum number of requests allowed
@@ -51,11 +48,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Initialize the Groq client
-  const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY, // Use Groq API key from environment variables
-  });
-
   try {
     // Extracting and Formatting the Request Data
     const data = await req.json();
@@ -75,25 +67,11 @@ export async function POST(req: NextRequest) {
       content: msg.content || "",
     }));
 
-    // Sending Data to Groq for a Chatbot Response
-    const completion = await groq.chat.completions.create({
-      messages: [{ role: "system", content: systemPrompt }, ...validatedMessages],
-      model: "mixtral-8x7b-32768", // Use Groq's model (e.g., Mixtral)
-      stream: true, // Enable streaming
-    });
-
-    // Handling the Streamed Response
-    let accumulatedResponse = "";
-
-    for await (const chunk of completion) {
-      const content = chunk.choices[0]?.delta?.content || ""; // Ensure content is always a string
-      if (content) {
-        accumulatedResponse += content;
-      }
-    }
+    // Simplify the chatbot response
+    const responseMessage = "hi, how can I assist you";
 
     // Sending the Final Response
-    return NextResponse.json({ response: accumulatedResponse }, { status: 200 });
+    return NextResponse.json({ response: responseMessage }, { status: 200 });
   } catch (error) {
     // Handle any errors that occur during the process
     console.error("Error in /api/chat:", error);
