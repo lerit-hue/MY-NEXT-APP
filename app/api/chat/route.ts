@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const messages = Array.isArray(data) ? data : [data];
 
-    // Validate and ensure the request data has 'role' property
+    // Validate and ensure the request data has 'role' and 'content' properties
     if (!messages || !messages.length) {
       return NextResponse.json(
         { error: "Invalid request data. 'messages' array is required." },
@@ -69,10 +69,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Ensure every message has a 'role' property
+    // Ensure every message has 'role' and 'content' properties
     const validatedMessages = messages.map((msg) => ({
       role: msg.role || "user",
-      content: msg.content,
+      content: msg.content || "",
     }));
 
     // Sending Data to Groq for a Chatbot Response
