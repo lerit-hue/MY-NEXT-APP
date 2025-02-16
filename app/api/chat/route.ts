@@ -1,5 +1,5 @@
-
 import { NextRequest, NextResponse } from "next/server";
+import fetch from 'node-fetch';
 
 // Rate limiting configuration (optional)
 const RATE_LIMIT = {
@@ -67,8 +67,31 @@ export async function POST(req: NextRequest) {
     // Use the system prompt if needed (for future use cases)
     console.log(systemPrompt);
 
-    // Simplify the chatbot response
-    const responseMessage = "hi, how can I help you?";
+    // Check if someone says "hi"
+    const userMessage = messages.find(msg => msg.content.toLowerCase() === "hi");
+    let responseMessage;
+
+    if (userMessage) {
+      responseMessage = "hi, how can I help you?";
+    } else {
+      // Fetch response from Groq API
+      const apiKey = process.env.GROQ_API_KEY;
+      const response = await fetch('https://api.groq.com/v1/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({ messages })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch response from Groq API');
+      }
+
+      const jsonResponse = await response.json();
+      responseMessage = jsonResponse.reply;
+    }
 
     // Sending the Final Response
     return NextResponse.json({ response: responseMessage }, { status: 200 });
