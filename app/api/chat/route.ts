@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     ) {
       // Return a short predefined response
       return NextResponse.json(
-        { response: "Hello! 👋 How can I help you today?" },
+        {  "Hello! 👋 How can I help you today?" },
         { status: 200 }
       );
     }
