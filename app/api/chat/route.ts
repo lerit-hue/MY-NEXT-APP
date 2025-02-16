@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     console.log(systemPrompt);
 
     // Check if someone says "hi"
-    const userMessage = messages.find(msg => msg.content.toLowerCase() === "hi");
+    const userMessage = messages.find(msg => msg.content && msg.content.toLowerCase() === "hi");
     let responseMessage;
 
     if (userMessage) {
