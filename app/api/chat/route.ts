@@ -32,9 +32,6 @@ function checkRateLimit(identifier: string): boolean {
   return true;
 }
 
-// System prompt for the chatbot
-const systemPrompt = `You are a friendly e-commerce AI chatbot. Your goal is to assist customers with their shopping needs, provide product recommendations, and facilitate a seamless checkout process.`;
-
 export async function POST(req: NextRequest) {
   // Use a custom identifier for rate limiting (e.g., API key, session ID, or user ID)
   const identifier =
@@ -77,3 +74,4 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
