@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk"; // Import Groq SDK
 
 // System prompt for the chatbot
-const systemPrompt = `You are a friendly e-commerce AI chatbot. Your goal is to assist customers with their shopping needs, provide product recommendations, and facilitate a seamless checkout process.`;
+const systemPrompt = `You are a friendly e-commerce AI chatbot. Your goal is to assist customers with their shopping needs, provide product recommendations, and facilitate a seamless checkout process.[...]`;
 
 // Rate limiting configuration (optional)
 const RATE_LIMIT = {
@@ -14,7 +14,7 @@ const RATE_LIMIT = {
 const rateLimitStore = new Map<string, { count: number; lastRequest: number }>();
 
 // Helper function to check rate limits
-function checkRateLimit(identifier: string) {
+function checkRateLimit(identifier: string): boolean {
   const now = Date.now();
   const record = rateLimitStore.get(identifier);
 
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const messages = Array.isArray(data) ? data : [data];
 
-    // Validate the request data
+    // Validate and ensure the request data has 'role' property
     if (!messages || !messages.length) {
       return NextResponse.json(
         { error: "Invalid request data. 'messages' array is required." },
@@ -69,9 +69,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Ensure every message has a 'role' property
+    const validatedMessages = messages.map((msg) => ({
+      role: msg.role || "user",
+      content: msg.content,
+    }));
+
     // Sending Data to Groq for a Chatbot Response
     const completion = await groq.chat.completions.create({
-      messages: [{ role: "system", content: systemPrompt }, ...messages],
+      messages: [{ role: "system", content: systemPrompt }, ...validatedMessages],
       model: "mixtral-8x7b-32768", // Use Groq's model (e.g., Mixtral)
       stream: true, // Enable streaming
     });
