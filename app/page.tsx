@@ -13,8 +13,13 @@ import {
 import { Spinner } from "../components/Spinner";
 
 function cleanMessage(content: string): string {
-  // Remove the initial message and curly brackets
-  return content.replace(/^{.?"message":"/, '').replace(/"}\s$/, '').replace(/\\n/g, '\n');
+  // Remove the curly bracket and quotation mark at the end
+  let cleanedContent = content.replace(/"}\s*$/, '');
+
+  // Replace numbered list items with line breaks
+  cleanedContent = cleanedContent.replace(/(\d+\.)\s*/g, '\n$1 ');
+
+  return cleanedContent.trim();
 }
 
 export default function Lerit() {
@@ -101,7 +106,9 @@ export default function Lerit() {
                   : "bg-gray-200 text-black"
               }`}
             >
-              {message.content}
+              {message.content.split('\n').map((line, i) => (
+                <div key={i}>{line}</div>
+              ))}
             </div>
           </div>
         ))}
