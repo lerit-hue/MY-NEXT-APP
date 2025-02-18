@@ -14,7 +14,7 @@ import { Spinner } from "../components/Spinner";
 
 function cleanMessage(content: string): string {
   // Remove the initial message and curly brackets
-  return content.replace(/^{.?"message":"/, '').replace(/"}.$/, '').replace(/\\n/g, '\n');
+  return content.replace(/^{.?"message":"/, '').replace(/"}\s$/, '').replace(/\\n/g, '\n');
 }
 
 export default function Lerit() {
