@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -8,7 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { Spinner } from "../components/Spinner";
 
 function cleanMessage(content: string): string {
-  let cleanedContent = content.replace(/"}\s*$/, '');
+  // Remove the `{"message":` prefix and any trailing curly braces or quotation marks
+  let cleanedContent = content.replace(/^\{"message":\s*"/, '').replace(/"}\s*$/, '');
+  // Replace numbered list items with line breaks
   cleanedContent = cleanedContent.replace(/(\d+\.)\s*/g, '\n$1 ');
   return cleanedContent.trim();
 }
