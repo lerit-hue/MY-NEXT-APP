@@ -1,24 +1,15 @@
+
 "use client";
 
 import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Spinner } from "../components/Spinner";
 
 function cleanMessage(content: string): string {
-  // Remove the curly bracket and quotation mark at the end
   let cleanedContent = content.replace(/"}\s*$/, '');
-
-  // Replace numbered list items with line breaks
   cleanedContent = cleanedContent.replace(/(\d+\.)\s*/g, '\n$1 ');
-
   return cleanedContent.trim();
 }
 
@@ -37,7 +28,6 @@ export default function Lerit() {
     if (!input.trim()) return;
 
     setIsTyping(true);
-
     const newMessage = { role: "user", content: input };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
@@ -48,9 +38,7 @@ export default function Lerit() {
         body: JSON.stringify({ messages: [...messages, newMessage] }),
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch response from the server.");
-      }
+      if (!response.ok) throw new Error("Failed to fetch response from the server.");
 
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -95,15 +83,11 @@ export default function Lerit() {
         {messages.map((message, index) => (
           <div
             key={index}
-            className={`flex ${
-              message.role === "user" ? "justify-end" : "justify-start"
-            }`}
+            className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
               className={`p-2 rounded-lg ${
-                message.role === "user"
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-black"
+                message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
               }`}
             >
               {message.content.split('\n').map((line, i) => (
